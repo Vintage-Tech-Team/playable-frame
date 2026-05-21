@@ -18,8 +18,8 @@ const RoutePlanner = () => {
   return (
     <SiteLayout>
       <Helmet>
-        <title>Route Planner — Trafficly</title>
-        <meta name="description" content="Plan a route between any two places and open it in Google Maps with live traffic." />
+        <title>US & Canada Route Planner — Trafficly</title>
+        <meta name="description" content="Plan driving routes across the US and Canada and open them in Google Maps with live traffic." />
         <link rel="canonical" href="/route-planner" />
       </Helmet>
 
@@ -29,8 +29,8 @@ const RoutePlanner = () => {
             <Navigation className="w-3.5 h-3.5 text-accent" />
             Plan your commute
           </span>
-          <h1 className="text-3xl md:text-5xl font-bold mb-4">Route Planner</h1>
-          <p className="text-muted-foreground text-lg">Type two places and open the route with live traffic.</p>
+          <h1 className="text-3xl md:text-5xl font-bold mb-4">US &amp; Canada Route Planner</h1>
+          <p className="text-muted-foreground text-lg">Type any two cities or addresses in the US or Canada and open the route with live traffic.</p>
         </div>
 
         <Card className="max-w-3xl mx-auto p-6 md:p-8 shadow-card-soft space-y-4">
@@ -38,13 +38,13 @@ const RoutePlanner = () => {
             <label className="text-sm font-medium mb-2 block flex items-center gap-2">
               <MapPin className="w-4 h-4 text-accent" /> From
             </label>
-            <Input value={from} onChange={(e) => setFrom(e.target.value)} placeholder="Mumbai, India" className="h-12" />
+            <Input value={from} onChange={(e) => setFrom(e.target.value)} placeholder="New York, NY, USA" className="h-12" />
           </div>
           <div>
             <label className="text-sm font-medium mb-2 block flex items-center gap-2">
               <MapPin className="w-4 h-4 text-highlight" /> To
             </label>
-            <Input value={to} onChange={(e) => setTo(e.target.value)} placeholder="Pune, India" className="h-12" />
+            <Input value={to} onChange={(e) => setTo(e.target.value)} placeholder="Toronto, ON, Canada" className="h-12" />
           </div>
 
           <Button
@@ -59,8 +59,27 @@ const RoutePlanner = () => {
           </Button>
 
           <p className="text-xs text-muted-foreground text-center">
-            Opens in Google Maps. For embedded turn-by-turn, connect a maps provider like Mapbox.
+            Optimized for routes within and between the United States and Canada. Opens in Google Maps with live traffic.
           </p>
+
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2 pt-2">
+            {[
+              { label: "NYC → Boston", from: "New York, NY, USA", to: "Boston, MA, USA" },
+              { label: "LA → San Francisco", from: "Los Angeles, CA, USA", to: "San Francisco, CA, USA" },
+              { label: "Chicago → Detroit", from: "Chicago, IL, USA", to: "Detroit, MI, USA" },
+              { label: "Toronto → Montreal", from: "Toronto, ON, Canada", to: "Montreal, QC, Canada" },
+              { label: "Vancouver → Seattle", from: "Vancouver, BC, Canada", to: "Seattle, WA, USA" },
+              { label: "Calgary → Banff", from: "Calgary, AB, Canada", to: "Banff, AB, Canada" },
+            ].map((p) => (
+              <button
+                key={p.label}
+                onClick={() => { setFrom(p.from); setTo(p.to); }}
+                className="text-xs px-3 py-2 rounded-md bg-secondary hover:bg-accent/10 text-muted-foreground hover:text-accent transition-colors"
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
         </Card>
       </section>
     </SiteLayout>
