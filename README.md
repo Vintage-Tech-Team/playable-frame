@@ -1,73 +1,193 @@
-# Welcome to your Lovable project
+# EstateUtil — Real Estate Productivity Platform (MVP)
 
-## Project info
+Modern utility platform with **17 real estate calculators**, **10 global tools**, and **10 measurement converters**. Built as a production-ready monorepo.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## Tech Stack
 
-## How can I edit this code?
+| Layer | Technology |
+|-------|------------|
+| Frontend | Next.js 16 (App Router), TypeScript, Tailwind CSS, shadcn-style UI |
+| Forms | React Hook Form + Zod |
+| State | Zustand |
+| Charts | Recharts |
+| Backend | NestJS, REST, Swagger |
+| Database | PostgreSQL + Prisma |
+| Shared | `@estate/formulas` — modular calculator & conversion engine |
 
-There are several ways of editing your application.
+## Project Structure
 
-**Use Lovable**
+```
+apps/
+  web/          # Next.js frontend
+  api/          # NestJS backend + Prisma
+packages/
+  formulas/     # Shared pure formula functions
+docker-compose.yml
+```
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+## Prerequisites
 
-Changes made via Lovable will be committed automatically to this repo.
+- Node.js 20+
+- Docker (for PostgreSQL)
+- npm 10+
 
-**Use your preferred IDE**
+## Quick Start
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### 1. Install dependencies
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+```bash
+npm install
+```
 
-Follow these steps:
+### 2. Start PostgreSQL
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+```bash
+docker compose up -d
+```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+### 3. Configure environment
 
-# Step 3: Install the necessary dependencies.
-npm i
+```bash
+cp apps/api/.env.example apps/api/.env
+cp apps/web/.env.example apps/web/.env.local
+```
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+### 4. Database setup
+
+```bash
+npm run db:generate
+npm run db:push
+npm run db:seed
+```
+
+### 5. Build shared formulas
+
+```bash
+npm run build -w @estate/formulas
+```
+
+### 6. Run development servers
+
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+- **Frontend:** http://localhost:3000
+- **API:** http://localhost:3001/api
+- **Swagger:** http://localhost:3001/api/docs
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+Or run separately:
 
-**Use GitHub Codespaces**
+```bash
+npm run dev:api
+npm run dev:web
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## API Modules
 
-## What technologies are used for this project?
+| Module | Path prefix | Description |
+|--------|-------------|-------------|
+| `calculators` | `/api/calculators/*` | 17 real estate calculators |
+| `global-tools` | `/api/global-tools/*` | Currency, weather, time, holidays |
+| `converters` | `/api/converters/*` | Unit conversion engine |
+| `utilities` | `/api/utilities/*` | Tool metadata, seed, history (structure-ready) |
 
-This project is built with:
+## Real Estate Calculators
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+Mortgage, Commission, Seller Net, Closing Costs, ROI, Rental Income, Affordability, Down Payment, Refinance, Cash Flow, Cap Rate, Mortgage Payoff, DTI, Price Per Sq Ft, Appreciation, Investment Analyzer, Offer Comparison.
 
-## How can I deploy this project?
+Formulas live in `packages/formulas` with placeholder comments where client-specific business rules may apply.
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+## Global Tools
 
-## Can I connect a custom domain to my Lovable project?
+Currency (ExchangeRate-API), World Clock, Time Zone Compare, Meeting Planner, Date Difference, Duration, Weather (Open-Meteo), UTC Converter, City Distance (Haversine), Holiday Calendar (sample data — swap for Nager.Date in production).
 
-Yes, you can!
+External APIs are abstracted in `apps/api/src/modules/global-tools/services/`.
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## Database
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+- **Tool** — metadata for all tools (seeded on first list request)
+- **CalculatorHistory** — optional history (structure ready)
+- **AppConfig** — key/value configuration
+- **ApiCache** — external API response cache
+
+## Deployment
+
+The frontend deploys to **Vercel**. The NestJS API and PostgreSQL must run elsewhere (Railway, Render, Fly.io, etc.) — Vercel hosts the Next.js app only.
+
+### 1. Deploy API + database (do this first)
+
+1. Create a PostgreSQL database ([Neon](https://neon.tech), [Supabase](https://supabase.com), or Railway).
+2. Deploy `apps/api` to Railway/Render/Fly.io with:
+   - `DATABASE_URL` — Postgres connection string
+   - `PORT` — platform default (often injected automatically)
+   - `CORS_ORIGIN` — your Vercel URL, e.g. `https://estate-util.vercel.app`
+   - `CORS_ALLOW_VERCEL=true` — optional, allows `*.vercel.app` preview deployments
+3. Build command: `npm install && npm run build -w @estate/formulas && npm run build -w api`
+4. Start command: `npm run start:prod -w api` (from repo root) or `node dist/main` from `apps/api`
+5. Run migrations: `npx prisma migrate deploy` (or `db push` for MVP) in `apps/api`
+6. Seed tools: `npm run db:seed -w api`
+7. Note your public API URL, e.g. `https://your-api.railway.app/api`
+
+### 2. Deploy frontend to Vercel
+
+**Option A — Vercel Dashboard (recommended)**
+
+1. Push the repo to GitHub/GitLab/Bitbucket.
+2. [vercel.com/new](https://vercel.com/new) → Import the repository.
+3. **Root Directory:** `apps/web` (Edit → Root Directory).
+4. Framework should auto-detect **Next.js** (uses `apps/web/vercel.json` for monorepo install).
+5. **Environment variables:**
+
+   | Name | Value |
+   |------|--------|
+   | `NEXT_PUBLIC_API_URL` | `https://your-api-host.com/api` |
+   | `NEXT_PUBLIC_SITE_URL` | `https://your-project.vercel.app` |
+   | `NEXT_PUBLIC_SITE_NAME` | `EstateUtil` |
+
+6. Deploy.
+
+**Option B — Vercel CLI**
+
+```bash
+npm i -g vercel
+cd apps/web
+vercel login
+vercel link
+vercel env add NEXT_PUBLIC_API_URL production
+vercel env add NEXT_PUBLIC_SITE_URL production
+vercel env add NEXT_PUBLIC_SITE_NAME production
+vercel --prod
+```
+
+After the first deploy, set `NEXT_PUBLIC_SITE_URL` to your final production domain and redeploy.
+
+### 3. Wire CORS on the API
+
+Set on your API host:
+
+```env
+CORS_ORIGIN=https://your-project.vercel.app,https://your-custom-domain.com
+CORS_ALLOW_VERCEL=true
+```
+
+### Environment variables reference
+
+See `apps/api/.env.example` and `apps/web/.env.example`.
+
+## Scripts
+
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | API + Web concurrently |
+| `npm run build` | Build formulas, API, and web |
+| `npm run db:push` | Push Prisma schema |
+| `npm run db:seed` | Seed tool metadata |
+
+## Out of Scope (MVP)
+
+Authentication, billing, CRM, admin dashboards, and AI features are intentionally excluded.
+
+## License
+
+Private — all rights reserved.

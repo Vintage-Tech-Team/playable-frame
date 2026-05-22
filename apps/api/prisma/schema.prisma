@@ -1,0 +1,59 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ToolCategory {
+  CALCULATOR
+  GLOBAL
+  CONVERTER
+}
+
+model Tool {
+  id          String       @id @default(cuid())
+  slug        String       @unique
+  name        String
+  description String
+  category    ToolCategory
+  tags        String[]
+  icon        String?
+  isActive    Boolean      @default(true)
+  sortOrder   Int          @default(0)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  histories CalculatorHistory[]
+}
+
+/// Optional history — structure ready; persistence can be enabled later
+model CalculatorHistory {
+  id        String   @id @default(cuid())
+  toolId    String
+  tool      Tool     @relation(fields: [toolId], references: [id], onDelete: Cascade)
+  inputs    Json
+  outputs   Json
+  createdAt DateTime @default(now())
+
+  @@index([toolId, createdAt])
+}
+
+model AppConfig {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     Json
+  updatedAt DateTime @updatedAt
+}
+
+model ApiCache {
+  id        String   @id @default(cuid())
+  cacheKey  String   @unique
+  payload   Json
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([expiresAt])
+}
